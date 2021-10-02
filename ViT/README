@@ -1,0 +1,8 @@
+需要安装的库 pytorch timm
+你不需要任何额外的安装
+
+对于当前只使用latency profiling的prototype来说：
+首先运行profiling下的layer_timing.py来生成latency profiling
+之后运行run.py来进行演示 python run.py --budget 0.6 或者默认值 python run.py
+
+ViT_drop_test2.py用来做accuracy measurement，同样的，任何的文件都不需要额外的操作，会自动使用改动过的timm文件

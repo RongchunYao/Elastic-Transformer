@@ -104,6 +104,6 @@ if __name__ == '__main__':
     dict2save['endphase'] = global_endphase_time
     dict2save['total'] = global_total_time
 
-    torch.save(dict2save, file_path + '/profiling_result/profiling_result')
+    torch.save(dict2save, file_dir + '/profiling_result/profiling_result')
     # print(time_list)
     

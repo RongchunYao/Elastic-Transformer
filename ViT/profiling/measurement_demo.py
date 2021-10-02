@@ -1,3 +1,4 @@
+'''
 import torch
 
 drop0 = torch.load('./acc-savings/vit_base_patch16_224_0drop_time1layer0_vbase20003a07-7b1b-4cca-ae74-bb86dd1bf73f')
@@ -14,5 +15,21 @@ sorted_indexes = layer_0_attn_score[0].argsort()
 # print(drop1[tuple([183])]['loss'][0])
 # print(drop1[tuple([79])]['loss'][0])
 
-
 print(drop0[tuple()]['attn'][0].sum(dim=1)[:,0])
+
+'''
+
+import torch
+import pathlib
+import os
+file_dir = str(pathlib.Path(__file__).parent.resolve())+'/'
+acc_file_dir = file_dir + '../measurement_data/'
+acc_files = os.listdir(acc_file_dir)
+
+base_profiling_file = ''
+
+for filename in acc_files:
+    if '0drop' in filename:
+        base_profiling_file = filename
+    
+

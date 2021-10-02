@@ -71,32 +71,41 @@ small_dataset = Small_Dataset(test_dataset,-1,100,2345)
 
 data_loader = torch.utils.data.DataLoader(small_dataset, batch_size=1, shuffle=False, num_workers=1)
 
-model.budget = 0.5
-model.with_budget = True
+
+import argparse
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--budget', type=float, default=0.6, help='please specify the budget')
+    args = parser.parse_args()
+
+    model.budget = args.budget
+    model.with_budget = True
+
+    correct_num = 0
+    count = 0
+    max_duration = 0
+    duration_sum = 0
 
 
-correct_num = 0
-count = 0
-max_duration = 0
-duration_sum = 0
+    for data,target in data_loader:
+        with torch.no_grad():
+            start_time = time.time()
+            output = model(data)
+            duration = time.time()- start_time
+            # model.oracle.print_log()
+            ans = output.data.max(1,keepdim=True)[1]
+            correct_num += int(ans.eq(target.data.view_as(ans)).sum())
 
-
-for data,target in data_loader:
-    with torch.no_grad():
-        start_time = time.time()
-        output = model(data)
-        duration = time.time()- start_time
-        # model.oracle.print_log()
-        ans = output.data.max(1,keepdim=True)[1]
-        correct_num += int(ans.eq(target.data.view_as(ans)).sum())
-
-        if duration > max_duration:
-            max_duration = duration
-        count += 1
-        duration_sum += duration
-        print(correct_num, count)
-        print(duration_sum/count)
-
-print(max_duration)
-        # print('time consumed is ', duration)
-        # model.oracle.print_log()
+            if duration > max_duration:
+                max_duration = duration
+            count += 1
+            duration_sum += duration
+            print(correct_num, count)
+            print(duration)
+            
+            
+    print('average duration: {}'.format(duration_sum/count))
+    print('maximum duration: {}'.format(max_duration))
+            
