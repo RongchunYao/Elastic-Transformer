@@ -1,0 +1,9 @@
+__pycache__
+ILSVRC2012
+*.tar
+*.tar.gz
+*.zip
+zip_file
+measurement_data
+acc_savings
+profiling_result
