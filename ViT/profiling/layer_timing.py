@@ -103,5 +103,8 @@ if __name__ == '__main__':
     dict2save['endphase'] = global_endphase_time
     dict2save['total'] = global_total_time
 
-    torch.save(dict2save, file_dir + '/profiling_result/profiling_result')
+    if not os.path.exists(file_dir + 'profiling_result/'):
+        os.makedirs(file_dir + 'profiling_result/')
+
+    torch.save(dict2save, file_dir + 'profiling_result/profiling_result')
     # print(time_list)
