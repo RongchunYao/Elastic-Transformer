@@ -113,18 +113,6 @@ class fake_oracle():
         budget_left = budget - (time.time() - start_time)
 
         estimate_time = env_factor * self.estimated_remaining_time[layer_index][token_num_droped]
-        # self.log[layer_index]['env_factor'] = env_factor
-        # self.log[layer_index]['estimate_time'] = estimate_time
-        # self.log[layer_index]['budget_left'] = budget_left
-        # self.log[layer_index]['last_layer_MLP_time'] = last_layer_MLP_time
-
-        # attn_score_for_this_layer = (attn_matrix.sum(dim=-2).sum(dim=1).squeeze(dim=0))
-        # if layer_index==0:
-        #     self.attn_score = attn_score_for_this_layer
-        # else:
-        #     self.attn_score = 0.5* ( self.attn_score + attn_score_for_this_layer)
-
-        # attn_score_for_this_layer = self.attn_score
 
         if estimate_time < budget_left:
             # self.log[layer_index]['drop_type'] = 'no drop'

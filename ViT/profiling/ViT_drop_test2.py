@@ -6,17 +6,12 @@ import numpy as np
 from torch.utils.data import Dataset
 import torch.nn.functional as F
 import uuid
-
-# import sys
-# sys.path = sys.path[1:]
-# import timm
-# sys.path = [''] + sys.path
+import os
 import timm
 import pathlib
 import argparse
 
 file_dir = str(pathlib.Path(__file__).parent.resolve()) + '/'
-
 PARALLEL = True
 
 
@@ -50,6 +45,18 @@ class Small_Dataset(Dataset):
 
 
 def select(candidate_list, left_count):
+    """Return all the combination of candidate_list, each combinatino's length is left_count.
+
+    Args:
+        candidate_list (arr): An array of candidate token index which we want to drop.
+        left_count (int): The count of drop tokens
+
+    Raises:
+        ValueError: [description]
+
+    Returns:
+        arr: A list of combinations
+    """
     if left_count == 0:
         return [[]]
     if len(candidate_list) < left_count or left_count < 0:
@@ -292,9 +299,10 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', type=int, default=0)
     args = parser.parse_args()
 
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+
     for exp_name, config in configuration.items():
         exp_name = 'vit_base_patch16_224'
-        # config = configuration[exp_name]
         model_name = config['model_name']
         total_patch_num = config['total_patch_num']
         img_size = config['img_size']
@@ -345,12 +353,7 @@ if __name__ == '__main__':
 
         log_option = True
 
-        # my_dict = torch.load('./logs/vit_base_patch16_224_0layer0_vbase')
-        # for drop in my_dict:
-        #     dict_per_drop = my_dict[drop]
-        #     print(dict_per_drop['attn'][0].shape)
         for drop_layer_index in drop_layer_list:
-            # test(device, model, exp_name, data_loader, total_patch_num, [[],[],[]], drop_layer_index, log_option, version)
             for drop_num in drop_num_list:
                 test(device,
                      model,
