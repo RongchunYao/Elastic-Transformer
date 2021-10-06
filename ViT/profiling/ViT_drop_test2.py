@@ -192,7 +192,9 @@ def test(device,
         print(drop_count, time.time() - start_time)
 
     if log_option:
-        save_file_name = file_dir + './acc-savings/' + exp_name + '_' + str(
+        if not os.path.exists(file_dir + "acc-savings/"):
+            os.makedirs(file_dir + "acc-savings/")
+        save_file_name = file_dir + '/acc-savings/' + exp_name + '_' + str(
             len(drop)) + 'drop_time' + str(drop_count) + 'layer' + str(layer_index) + '_' + version + str(uuid.uuid4())
         print(save_file_name)
         torch.save(record_dict, save_file_name)
