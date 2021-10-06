@@ -237,7 +237,7 @@ configuration = {
         'cpu': False,
         'img_size': 224,
         'total_patch_num': 196,
-        'drop_num_list': [1],
+        'drop_num_list': [10],
         'batch_size': 256,
         'drop_layer_list': [i for i in range(12)],
         'num_workers': 24,
