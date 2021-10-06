@@ -5,5 +5,6 @@ ILSVRC2012
 *.zip
 zip_file
 measurement_data
+acc-savings
 acc_savings
 profiling_result

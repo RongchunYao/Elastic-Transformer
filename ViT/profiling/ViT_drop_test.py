@@ -67,7 +67,9 @@ def select(candidate_list, left_count):
 patch_order = "nothing"
 def drop_hook(module, input):
     global patch_order 
-    return torch.cat([input[0][:,patch_order],input[0][:,-1,:].unsqueeze(dim=1)],dim=1)
+    if 0 in patch_order:
+        print('error!')
+    return torch.cat([input[0][:,-1,:].unsqueeze(dim=1)], input[0][:,patch_order],dim=1)
     
 
 
@@ -126,6 +128,7 @@ def forward_once_without_timer(device, model, data_loader, order, layer_index, n
                     exit()
                 attn_score = torch.Tensor()
                 for idx,blk in enumerate(model.blocks):
+                    # attn_list[idx] = torch.cat((attn_list[idx], blk.attn_score[:,:,0,:].squeeze(dim=0)))
                     attn_list[idx] = torch.cat((attn_list[idx], blk.attn_score.sum(dim=-2).squeeze(dim=0)))
     
     handle.remove()
@@ -182,9 +185,9 @@ def select(candidate_list, left_count):
 
 def generate_drops(max_patch_num, drop_num, generate_time = 100, random_seed=1234):
     if generate_time == -1:
-        return select([i for i in range(max_patch_num)], drop_num)
+        return select([i for i in range(1,max_patch_num+1)], drop_num)
     drop_list2ret = []
-    candidate_list = [i for i in range(max_patch_num)]
+    candidate_list = [i for i in range(1,max_patch_num+1)]
     random.seed(random_seed)
     for i in range(generate_time):
         one_sample = random.sample(candidate_list, drop_num)

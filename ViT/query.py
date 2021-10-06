@@ -168,7 +168,7 @@ class fake_oracle():
             satisfied = False
             while(low<=high):
                 cur = int((low+high)>>1)
-                latency_gain = (env_factor*self.estimated_remaining_time[layer_index][cur]/budget_left) * env_factor*( self.estimated_remaining_time[layer_index][token_num_droped]-self.estimated_remaining_time[layer_index][cur])
+                latency_gain = 1.2*(env_factor*self.estimated_remaining_time[layer_index][cur]/budget_left) * env_factor*( self.estimated_remaining_time[layer_index][token_num_droped]-self.estimated_remaining_time[layer_index][cur])
                 acc_punish = (sorted_attn_score[cur-token_num_droped-1]/attn_score_sum)*self.drop_punishment_coefficient[layer_index]
                 if latency_gain* self.decision_factor > acc_punish:
                     low = cur + 1
@@ -213,7 +213,10 @@ class fake_oracle():
         
 
     def make_drop(self, layer_index, start_time, budget, last_layer_MLP_time, attn_matrix):
-        return self.make_drop_v1(layer_index, start_time, budget, last_layer_MLP_time, attn_matrix)
+        if self.policy == 'v1':
+            return self.make_drop_v1(layer_index, start_time, budget, last_layer_MLP_time, attn_matrix)
+        elif self.policy == 'v0':
+            return self.make_drop_v0(layer_index, start_time, budget, last_layer_MLP_time, attn_matrix)
 
     def __init__(self, filename):
         self.fit_for_Xeon_E5_2690_v4_2dot60GHz_one_thread(filename)

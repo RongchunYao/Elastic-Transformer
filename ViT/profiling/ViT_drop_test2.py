@@ -72,7 +72,7 @@ def select(candidate_list, left_count):
 patch_order = "nothing"
 def drop_hook(module, input):
     global patch_order
-    return torch.cat([input[0][:,patch_order],input[0][:,-1,:].unsqueeze(dim=1)],dim=1)
+    return torch.cat([input[0][:,0,:].unsqueeze(dim=1),input[0][:,patch_order]],dim=1)
     
 
 
@@ -190,10 +190,10 @@ def select(candidate_list, left_count):
 
 def generate_drops(max_patch_num, drop_num, generate_time = 100, random_seed=1234):
     if generate_time == -1:
-        return select([i for i in range(max_patch_num)], drop_num)
+        return select([i for i in range(1,max_patch_num+1)], drop_num)
     drop_list2ret = []
-    candidate_list = [i for i in range(max_patch_num)]
-    random.seed(random_seed)
+    candidate_list = [i for i in range(1,max_patch_num+1)]
+    # random.seed(random_seed)
     for i in range(generate_time):
         one_sample = random.sample(candidate_list, drop_num)
         while one_sample in drop_list2ret:
@@ -227,9 +227,9 @@ configuration = {
         'img_size' : 224,
         'total_patch_num' : 196,
         'drop_num_list' : [1],
-        'batch_size' : 256,
-        'drop_layer_list' : [i for i in range(12)],
-        'num_workers' : 24,
+        'batch_size' : 16,
+        'drop_layer_list' : [i for i in range(1)],
+        'num_workers' : 4,
         'dataset_ratio' : 1/50,
         'dataset_size' : 1024,
         'get_attn' : False,

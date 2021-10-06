@@ -68,7 +68,7 @@ def forward_once(model, input_data, token_num_list):
 
 import numpy as np
 if __name__ == '__main__':
-    drop_max = 128
+    drop_max = 180
     token_num_list = [ 196-i for i in range(drop_max)]
     global_attention_time = torch.zeros(drop_max, 12)
     global_MLP_time = torch.zeros(drop_max, 12)

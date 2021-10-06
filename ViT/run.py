@@ -67,9 +67,7 @@ test_dataset = torchvision.datasets.ImageFolder(file_dir+'/ILSVRC2012',
                     normalize,
                 ]))        
         
-small_dataset = Small_Dataset(test_dataset,-1,100,2345)
 
-data_loader = torch.utils.data.DataLoader(small_dataset, batch_size=1, shuffle=False, num_workers=1)
 
 
 import argparse
@@ -78,7 +76,13 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--budget', type=float, default=0.6, help='please specify the budget')
+    parser.add_argument('--policy', type=str, default='v0', help='please specify the budget')
+    parser.add_argument('--seed', type=int, default=2345, help='random seed of dataset')
     args = parser.parse_args()
+
+    model.oracle.policy = args.policy
+    small_dataset = Small_Dataset(test_dataset,-1,100,args.seed)
+    data_loader = torch.utils.data.DataLoader(small_dataset, batch_size=1, shuffle=False, num_workers=1)
 
     model.budget = args.budget
     model.with_budget = True
