@@ -299,7 +299,7 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', type=int, default=0)
     args = parser.parse_args()
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
 
     for exp_name, config in configuration.items():
         exp_name = 'vit_base_patch16_224'
