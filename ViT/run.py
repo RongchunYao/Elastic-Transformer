@@ -2,96 +2,45 @@ import time
 import os
 import torch
 import timm
-import query
+from ViT import query, vision_transformer, cola_utils
 import torchvision
-import numpy as np
-from torch.utils.data import Dataset
-import vision_transformer
 import pathlib
-
-file_dir = str(pathlib.Path(__file__).parent.resolve())+'/'
-
-
-class Small_Dataset(Dataset):
-    def __init__(self, parent_dataset,  ratio, size, shuffle_seed):
-        self.parent = parent_dataset
-        index_array = np.arange(len(self.parent))
-        self.shuffle_seed = shuffle_seed
-        np.random.seed(self.shuffle_seed)
-        np.random.shuffle(index_array)
-        self.ratio = ratio
-        if self.ratio<0:
-            self.length = len(self.parent)
-        else:
-            self.length = int(len(self.parent)*ratio)
-        if size>0 :
-            self.length = size
-
-        if self.length > len(self.parent):
-            raise ValueError('subset could not be bigger than parent')
-        self.lookup_array = index_array[:self.length]
-        self.data_list = []
-        for i in range(len(self.lookup_array)):
-            self.data_list.append(self.parent[self.lookup_array[i]])
-
-
-    def __len__(self):
-        return self.length
-
-    def __getitem__(self, index):
-        return self.data_list[index]
-
-
-cpu_num = 1
-os.environ['OMP_NUM_THREADS'] = str(cpu_num)
-os.environ['OPENBLAS_NUM_THREADS'] = str(cpu_num)
-os.environ['MKL_NUM_THREADS'] = str(cpu_num)
-os.environ['VECLIB_MAXIMUM_THREADS'] = str(cpu_num)
-os.environ['NUMEXPR_NUM_THREADS'] = str(cpu_num)
-torch.set_num_threads(cpu_num)
-device = torch.device('cpu')
-
-# model = timm.models.vision_transformer.VisionTransformer(depth=12).to(device)
-model = timm.create_model('vit_base_patch16_224', pretrained=True).to(device)
-
-model.eval()
-model.oracle = query.fake_oracle(file_dir+'/profiling/profiling_result/profiling_result')
-
-img_size = 224
-normalize = torchvision.transforms.Normalize(mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5])
-test_dataset = torchvision.datasets.ImageFolder(file_dir+'/ILSVRC2012',
-                torchvision.transforms.Compose([
-                    torchvision.transforms.Resize(int(img_size*8/7)),
-                    torchvision.transforms.CenterCrop(img_size),
-                    torchvision.transforms.ToTensor(),
-                    normalize,
-                ]))        
-        
-
-
-
 import argparse
 
-if __name__ == '__main__':
+file_dir = str(pathlib.Path(__file__).parent.resolve())
+project_root_dir = str(pathlib.PurePath(file_dir, '..'))
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--budget', type=float, default=0.6, help='please specify the budget')
-    parser.add_argument('--policy', type=str, default='v0', help='please specify the budget')
-    parser.add_argument('--seed', type=int, default=2345, help='random seed of dataset')
-    args = parser.parse_args()
 
-    model.oracle.policy = args.policy
-    small_dataset = Small_Dataset(test_dataset,-1,100,args.seed)
-    data_loader = torch.utils.data.DataLoader(small_dataset, batch_size=1, shuffle=False, num_workers=1)
 
-    model.budget = args.budget
-    model.with_budget = True
+def run_demo(budget = 0.6,  policy='v0', profiling_file = 'profiling_result', sample_num = 100, dataset_seed = 2345):
 
+    model_name = 'vit_base_patch16_224'
+    device_type = 'cpu'
+    batch = 1
+    profiling_dir = str(pathlib.PurePath(file_dir, 'profiling', 'profiling_result'))
+    abs_profiling_path = profiling_file
+    
+    for path, directories, files in os.walk(profiling_dir):
+        if profiling_file in files:
+            abs_profiling_path = str(pathlib.PurePath(path, profiling_file))
+    
+    if pathlib.Path(profiling_file).is_file():
+        abs_profiling_path = profiling_file
+
+    cola_utils.set_cpu_resource()
+    device = torch.device(device_type)
+    model = timm.create_model(model_name, pretrained=True).to(device)
+    model.eval()
+    dummy_oracle = query.fake_oracle(abs_profiling_path, policy)
+    model.set_budget(budget)
+    model.set_oracle(dummy_oracle)
+    validation_dataset = cola_utils.ILSVRC2012_val_dataset()
+    small_dataset = cola_utils.Small_Dataset(validation_dataset,-1,sample_num,dataset_seed)
+    data_loader = torch.utils.data.DataLoader(small_dataset, batch_size=batch, shuffle=False, num_workers=1)
     correct_num = 0
     count = 0
     max_duration = 0
     duration_sum = 0
-
 
     for data,target in data_loader:
         with torch.no_grad():
@@ -109,7 +58,16 @@ if __name__ == '__main__':
             print(correct_num, count)
             print(duration)
             
-            
     print('average duration: {}'.format(duration_sum/count))
     print('maximum duration: {}'.format(max_duration))
-            
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--budget', '-budget', type=float, default=0.6, help='please specify the budget')
+    parser.add_argument('--policy', '-policy', type=str, default='v0', help='please specify the policy')
+    parser.add_argument('--dataset-size', '-dataset-size', type=int, default=100, help='how many images to run as a subset of dataset (IMAGENET2012 validation), default value: 100')
+    parser.add_argument('--seed', '-seed', type=int, default=2345, help='random seed of choosing a image from dataset')
+    parser.add_argument('--profiling-file', '-profiling-file', type=str, default='profiling_result', help='specify which profiling file to use, default value: profiling_result')
+    args = parser.parse_args()
+    run_demo(budget=args.budget, policy=args.policy, profiling_file=args.profiling_file, dataset_seed=args.seed)

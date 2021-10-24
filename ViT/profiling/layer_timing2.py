@@ -14,7 +14,7 @@ file_dir = str(pathlib.Path(__file__).parent.resolve())+'/'
 
 device = torch.device('cuda')
 
-model = timm.create_model('vit_base_patch16_224', pretrained=True).to(device)
+model = timm.create_model('vit_base_patch16_224', pretrained=True).to(device).eval()
 
 img_size = 224
 normalize = torchvision.transforms.Normalize(mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5])

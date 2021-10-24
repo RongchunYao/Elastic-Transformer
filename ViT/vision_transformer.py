@@ -367,11 +367,8 @@ class VisionTransformer(nn.Module):
         
         last_layer_consumed_time = -1
         for index, blk in enumerate(self.blocks):
-            
             x, last_layer_consumed_time = blk(x, index, self.start_time, self.budget, self.oracle, last_layer_consumed_time)
             
-            
-
         x = self.norm(x)
         if self.dist_token is None:
             return self.pre_logits(x[:, 0])
@@ -396,6 +393,12 @@ class VisionTransformer(nn.Module):
             x = self.head(x)
         return x
 
+    def set_budget(self, budget):
+        self.budget = budget
+        self.with_budget = True
+
+    def set_oracle(self, oracle):
+        self.oracle = oracle
 
 def _init_vit_weights(module: nn.Module, name: str = '', head_bias: float = 0., jax_impl: bool = False):
     """ ViT weight initialization

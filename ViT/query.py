@@ -43,6 +43,7 @@ class fake_oracle():
         self.max_drop_num = estimated_remaining_time.shape[1]-1
         token_number = torch.Tensor([self.total_token_num-i  for i in range(self.max_drop_num+1)])
 
+        '''
         self.per_layer_attn_fit = []
         self.per_layer_MLP_fit = []
         self.remaining_time_fit = []
@@ -53,10 +54,11 @@ class fake_oracle():
             self.per_layer_MLP_fit.append(np.poly1d(np.polyfit(token_number, MLP_time_consumed[i],1)))
             self.remaining_time_fit.append(np.poly1d(np.polyfit(token_number, estimated_remaining_time[i],2)))
         
+        '''
         # bigger means that we lose more accuracy
         self.drop_punishment_coefficient = [50, 35, 18, 17, 16, 15, 14, 13, 12, 10, 10, 10]
         self.decision_factor = 13
-        self.latency_reduce_gain_coefficient = [ self.remaining_time_fit[i].coeffs[1] for i in range(12) ]
+        # self.latency_reduce_gain_coefficient = [ self.remaining_time_fit[i].coeffs[1] for i in range(12) ]
         self.attn_score = None
         
     
@@ -218,9 +220,13 @@ class fake_oracle():
         elif self.policy == 'v0':
             return self.make_drop_v0(layer_index, start_time, budget, last_layer_MLP_time, attn_matrix)
 
-    def __init__(self, filename):
+    def __init__(self, filename, policy='v0'):
         self.fit_for_Xeon_E5_2690_v4_2dot60GHz_one_thread(filename)
         self.log = [ {} for i in range(12) ]
+        self.policy = policy
+
+    def set_policy(self, policy):
+        self.policy = policy
 
     def print_log(self):
         for i in range(12):
@@ -230,11 +236,12 @@ class fake_oracle():
             print('')
 
 if __name__ == '__main__':
-    my_oracle = fake_oracle('profiling/profiling_result/profiling_result')
-    print(my_oracle.total_time_consumed[0])
-    print(my_oracle.prepare_time_consumed[0])
+    pass
+    # my_oracle = fake_oracle('profiling/profiling_result/profiling_result')
+    # print(my_oracle.total_time_consumed[0])
+    # print(my_oracle.prepare_time_consumed[0])
     # print(my_oracle.attn_time_consumed[0][0])
     # print(my_oracle.MLP_time_consumed[0][0])
-    print(my_oracle.block_time_consumed[:,0])
+    # print(my_oracle.block_time_consumed[:,0])
     # print(my_oracle.block_time_consumed.sum(dim=0)[0])
-    print(my_oracle.endphase_time_consumed[0])
+    # print(my_oracle.endphase_time_consumed[0])
