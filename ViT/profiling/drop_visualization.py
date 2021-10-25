@@ -1,35 +1,26 @@
 import torch
-import torchvision
 import numpy as np
 import pathlib
-import utils
 import sys
-sys.path = sys.path[1:]
 import timm
-sys.path = [''] + sys.path
-# to get the attention
-import vision_transformer2 
+from ViT import cola_utils
+from ViT.profiling import vision_transformer2
 
-file_dir = str(pathlib.Path(__file__).parent.resolve())+'/'
+'''
+    This file is used to see the acc after we mask a big rectangle
+'''
+
+file_dir = str(pathlib.Path(__file__).parent.resolve())
 
 device = torch.device('cuda')
 
 model = timm.create_model('vit_base_patch16_224', pretrained=True).to(device).eval()
 
-img_size = 224
-normalize = torchvision.transforms.Normalize(mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5])
-test_dataset = torchvision.datasets.ImageFolder(file_dir + '../ILSVRC2012',
-                torchvision.transforms.Compose([
-                    torchvision.transforms.Resize(int(img_size*8/7)),
-                    torchvision.transforms.CenterCrop(img_size),
-                    torchvision.transforms.ToTensor(),
-                    normalize,
-                ]))        
-
+test_dataset = cola_utils.ILSVRC2012_val_dataset()
 
 def origin_acc():
 
-    small_dataset = utils.Small_Dataset(test_dataset,-1,100,2345)
+    small_dataset = cola_utils.Small_Dataset(test_dataset,-1,100,2345)
     data_loader = torch.utils.data.DataLoader(small_dataset,persistent_workers = True, batch_size=10, shuffle=False, num_workers=4)
 
     correct_num = 0
@@ -44,11 +35,10 @@ def origin_acc():
     print(correct_num)
 
 
-
 patch_order = "nothing"
 def drop_hook(module, input):
     global patch_order
-    return torch.cat([input[0][:,patch_order],input[0][:,-1,:].unsqueeze(dim=1)],dim=1)
+    return torch.cat([input[0][:,0,:].unsqueeze(dim=1), input[0][:,patch_order]],dim=1)
 
 
 import PIL
@@ -62,19 +52,18 @@ def mask_token(input_tensor, mask_list):
     return input_tensor
 
 
-def visualization():
-    small_dataset = utils.Small_Dataset(test_dataset,-1,100,1234)
-    pic_tensor, target = small_dataset[6]
-    pic_tensor = mask_token(pic_tensor, [(j,i) for i in range(3,7) for j in range(0,13)])
-
+def visualization(x_start=3, x_end=7, y_start=0, y_end=13, picture_index=6, sample_num=100):
+    small_dataset = cola_utils.Small_Dataset(test_dataset,-1, sample_num ,1234)
+    pic_tensor, target = small_dataset[picture_index]
+    pic_tensor = mask_token(pic_tensor, [(j,i) for i in range(y_start,y_end) for j in range(x_start,x_end)])
 
     img = transforms.ToPILImage()(pic_tensor).convert('RGB')
     img.show()
 
     global patch_order
     patch_order = [i for i in range(1,197)]
-    for i in range(0,13):
-        for j in range(3,7):
+    for i in range(y_start, y_end):
+        for j in range(x_start, x_end):
             patch_order.remove(1+j*14+i)
 
     handle = model.blocks[0].register_forward_pre_hook(drop_hook)

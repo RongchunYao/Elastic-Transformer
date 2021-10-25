@@ -62,13 +62,13 @@ def ILSVRC2012_val_dataset(image_size=224, dataset_dir_name = 'ILSVRC2012'):
         dataset_abs_path = dataset_dir_name
     
     normalize = torchvision.transforms.Normalize(mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5])
-    test_dataset = torchvision.datasets.ImageFolder(dataset_abs_path,
-                    torchvision.transforms.Compose([
+    transfer = torchvision.transforms.Compose([
                         torchvision.transforms.Resize(int(image_size*8/7)),
                         torchvision.transforms.CenterCrop(image_size),
                         torchvision.transforms.ToTensor(),
                         normalize,
-                    ]))
+                    ])
+    test_dataset = torchvision.datasets.ImageFolder(dataset_abs_path, transfer)
 
     return test_dataset
 
