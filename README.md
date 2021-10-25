@@ -1,4 +1,3 @@
-# I REWRITE SOME CODE SO USAGE IS INVALID. I WILL UPDATE TOMORROW
 # Adaptive Inference for Transformer
 This repository is a simple demo for CPU Adaptive Inference for both pytorch and onnx runtime web. We currently use pretrained vit_base_patch16_224 from timm as the demo and haven't extend support to other models.  
 
@@ -14,23 +13,26 @@ This repository is a simple demo for CPU Adaptive Inference for both pytorch and
 
 Download and extract ImageNet 2012 validation dataset images from http://image-net.org/. 
 
-You could download the pre-process script from https://github.com/soumith/imagenetloader.torch/blob/master/valprep.sh or somewhere else you like. Put the pre-process script in the directory where validation dataset is and run.
+You could download the pre-process script from https://github.com/soumith/imagenetloader.torch/blob/master/valprep.sh or somewhere else you like. Put the pre-process script in the directory where validation dataset is and run. You could put the dataset folder any where in the project directory, if the folder name is not 'ILSVRC2012', you need to specify the path to the folder or folder name, for example
+```
+python -m ViT.run --dataset=DIR_NAME_OR_PATH
+```
 
 ### Pytorch Demo
 First, to generate profiling file run: 
 ```
-python path/to/profiling.py
+python -m ViT.profiling.profiling
 ```
 Run dynamic inference:
 ```
-python path/to/run.py
+python -m ViT.run
 ```
 To see option meanings:
 ```
-python path/to/profiling.py --help
-python path/to/run.py --help
+python -m profiling.profiling --help
+python -m ViT.run --help
 ```
-You don't have to cd into directory where layer_timing.py or run.py is.
+
 
 
 ### Onnx Web Demo
