@@ -17,7 +17,14 @@ You could download the pre-process script from https://github.com/soumith/imagen
 ```
 python -m ViT.run --dataset=DIR_NAME_OR_PATH
 ```
-
+You do not need to download dataset if you just want to do the profiling to see the potential of gaining the time reduction. Just run command below for cpu
+```
+python -m ViT.profiling.profiling --device=cpu 
+```
+and command below for gpu 
+```
+python -m ViT.profiling.profiling --device=cuda
+```
 ### Pytorch Demo
 First, to generate profiling file run: 
 ```

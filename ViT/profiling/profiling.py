@@ -9,7 +9,7 @@ import argparse
 file_dir = str(pathlib.Path(__file__).parent.resolve())
 project_root_dir = str(pathlib.PurePath(file_dir, '..', '..'))
 
-token_num_g = 'undefined'
+token_num_g = None
 
 def drop_hook(module, input):
     global token_num_g
@@ -26,6 +26,13 @@ def forward_once(model, input_data, token_num_list):
     total_time_list = []
     endphase_time_list = []
     model.eval()
+    '''
+        for warmup
+    '''
+
+    with torch.no_grad():
+        model(input_data)
+
     for token_num in token_num_list:
         token_num_g = token_num    
         with torch.no_grad():
@@ -40,7 +47,7 @@ def forward_once(model, input_data, token_num_list):
     return attention_time_list, MLP_time_list, prepare_time_list, encoder_time_list,  endphase_time_list, total_time_list
 
 
-def do_profiling(forward_times = 10, saving_name = 'profiling_result'):
+def do_profiling(forward_times = 10, saving_name = 'profiling_result', device_type='cpu'):
 
     drop_max = 180
     none_cls_token_num = 196
@@ -48,14 +55,17 @@ def do_profiling(forward_times = 10, saving_name = 'profiling_result'):
     layer_num = 12
     in_channel = 3
     batch = 1
-    device_type = 'cpu'
     model_name = 'vit_base_patch16_224'
     saving_dir = str(pathlib.PurePath(file_dir, 'profiling_result'))
     abs_saving_path = str(pathlib.PurePath(saving_dir, saving_name))
 
+    global token_num_g
+    token_num_g = none_cls_token_num
+
 
     pathlib.Path(saving_dir).mkdir(parents=True, exist_ok=True)
     cola_utils.set_cpu_resource()
+    cpu_device = torch.device('cpu')
     device = torch.device(device_type)
     model = timm.create_model(model_name, pretrained=True).to(device)
     model.eval()
@@ -69,9 +79,10 @@ def do_profiling(forward_times = 10, saving_name = 'profiling_result'):
     dict2save['endphase'] = torch.zeros(drop_max)
     dict2save['total'] = torch.zeros(drop_max)
     
+    input_data = torch.randn(batch,in_channel,image_size,image_size).to(device)
+
     for i in range(forward_times):
         print('iteration {:d}/{:d}'.format(i+1,forward_times))
-        input_data = torch.randn(batch,in_channel,image_size,image_size)
         attention_time_list, MLP_time_list, prepare_time_list, encoder_time_list,  endphase_time_list, total_time_list = forward_once(model, input_data, token_num_list)
         dict2save['attn'] += torch.Tensor(attention_time_list)
         dict2save['MLP'] += torch.Tensor(MLP_time_list)
@@ -82,7 +93,13 @@ def do_profiling(forward_times = 10, saving_name = 'profiling_result'):
     
     for key in ['attn', 'MLP', 'prepare', 'encoder', 'endphase', 'total']:
         dict2save[key] /= forward_times
-
+        dict2save[key] = dict2save[key].to(cpu_device)
+    
+    print('printing part of the result to see the time-reduction-gain potential')
+    print('printing time reduction by droping 0 and 179 tokens (197 in total) on the first layer')
+    print('time consumption without drop is {:.6f}'.format(dict2save['total'][0]))
+    print('time consumption with drop {} tokens is {:.6f}'.format(drop_max-1, dict2save['total'][-1]))
+    print('total time reduction by drop {} tokens is {:.6f}'.format(drop_max-1, dict2save['total'][0]-dict2save['total'][-1]))
     torch.save(dict2save, abs_saving_path)
 
     
@@ -90,8 +107,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--forward-times', '-forward', type=int, default=10, help='specify how many times do we run the time \
         profiling, we average the results as the final output, default value: 10')
-
+    parser.add_argument('--device', '-device', type=str, default='cpu', help= 'specify the device to run on, default: cpu')
     parser.add_argument('--output', '-output', type=str, default='profiling_result', help='specify the output filename, default value: profiling_result')
     args = parser.parse_args()
 
-    do_profiling(forward_times= args.forward_times, saving_name=args.output)
+    do_profiling(forward_times= args.forward_times, saving_name=args.output, device_type=args.device)
