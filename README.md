@@ -36,7 +36,7 @@ python -m ViT.run
 ```
 To see option meanings:
 ```
-python -m profiling.profiling --help
+python -m ViT.profiling.profiling --help
 python -m ViT.run --help
 ```
 
